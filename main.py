@@ -32,7 +32,6 @@ TRANSLATIONS = {
         "btn_full": "تست کامل",
         "btn_export": "خروجی TXT",
         "placeholder_region": "کد منطقه (مثلا SJC)",
-        "placeholder_custom_ips": "رنج‌های CIDR یا IP دلخواه (هر کدام در یک خط)... \nدر صورت خالی بودن، از رنج‌های پیش‌فرض استفاده می‌شود.",
         "label_speed_cnt": "تعداد تست",
         "label_port": "پورت",
         "label_workers": "تردها",
@@ -62,10 +61,10 @@ TRANSLATIONS = {
         "copy_btn": "کپی آی‌پی",
         "copied_status": "آی‌پی {ip} کپی شد",
         "unknown_region": "منطقه نامشخص",
-        "log_gen_ips": "در حال تولید آی‌پي‌های تصادفی از رنج‌ها... (پورت: {port})",
+        "log_gen_ips": "در حال تولید آی‌پي‌های تصادفی از رنج‌های رسمی کلودفلر... (پورت: {port})",
         "log_err_cidr": "خطا در پردازش رنج {cidr}: {e}",
         "log_err_gen_list": "خطا در تولید لیست آی‌پی",
-        "log_gen_count": "تعداد {count} آی‌پی تولید شد.",
+        "log_gen_count": "تعداد {count} آی‌پی تصادفی تولید شد.",
         "log_start_ping": "شروع تست پینگ روی {count} آی‌پی...",
         "log_user_cancel": "عملیات توسط کاربر متوقف شد.",
         "log_scan_err": "خطا در حین اسکن: {e}",
@@ -98,7 +97,6 @@ TRANSLATIONS = {
         "btn_full": "Full Test",
         "btn_export": "Export TXT",
         "placeholder_region": "Region Code (e.g. SJC)",
-        "placeholder_custom_ips": "Custom CIDR ranges or IPs (one per line)...\nLeave empty to use default ranges.",
         "label_speed_cnt": "Test Count",
         "label_port": "Port",
         "label_workers": "Threads",
@@ -128,10 +126,10 @@ TRANSLATIONS = {
         "copy_btn": "Copy IP",
         "copied_status": "IP {ip} copied to clipboard",
         "unknown_region": "Unknown",
-        "log_gen_ips": "Generating random IPs from blocks... (Port: {port})",
+        "log_gen_ips": "Generating random IPs from Cloudflare blocks... (Port: {port})",
         "log_err_cidr": "Error processing CIDR {cidr}: {e}",
         "log_err_gen_list": "Failed to generate IP list",
-        "log_gen_count": "Generated {count} IPs.",
+        "log_gen_count": "Generated {count} random IPs.",
         "log_start_ping": "Starting latency test for {count} IPs...",
         "log_user_cancel": "Task stopped by user.",
         "log_scan_err": "Scan error: {e}",
@@ -174,6 +172,7 @@ def get_system_font():
 
 SYSTEM_FONT = get_system_font()
 
+# استایل‌های مدرن حالت تاریک (Dark Mode CSS)
 GLOBAL_DARK_STYLE = f"""
     QWidget {{
         background-color: #121214;
@@ -222,7 +221,7 @@ GLOBAL_DARK_STYLE = f"""
         background-color: #18181C;
         border: 1px solid #1E293B;
         border-radius: 8px;
-        color: #F8FAFC;
+        color: #38BDF8;
         padding: 10px;
     }}
     QScrollBar:vertical {{
@@ -244,9 +243,9 @@ GLOBAL_DARK_STYLE = f"""
 
 CF_IPV4_CIDRS = [
     "103.21.244.0/22", "103.22.200.0/22", "103.31.4.0/22", "104.16.0.0/13",
-    "104.24.0.0/14", "108.162.192.0/18", "131.0.72.0/22", "141.101.64.0/18",
-    "162.158.0.0/15", "172.64.0.0/13", "173.245.48.0/20", "188.114.96.0/20",
-    "190.93.240.0/20", "197.234.240.0/22", "198.41.128.0/17"
+	"104.24.0.0/14", "108.162.192.0/18", "131.0.72.0/22", "141.101.64.0/18",
+	"162.158.0.0/15", "172.64.0.0/13", "173.245.48.0/20", "188.114.96.0/20",
+	"190.93.240.0/20", "197.234.240.0/22", "198.41.128.0/17"
 ]
 
 CF_IPV6_CIDRS = [
@@ -313,36 +312,18 @@ class CloudflareScanner:
 
     def generate_ips(self) -> List[str]:
         ip_list = []
-        for item in self.cidrs:
-            item = item.strip()
-            if not item: continue
+        for cidr in self.cidrs:
             try:
-                # اگر ورودی ساب‌نت نباشد، یعنی آی‌پی تکی است
-                if '/' not in item:
-                    if self.ip_version == 4:
-                        ipaddress.IPv4Address(item)
-                    else:
-                        ipaddress.IPv6Address(item)
-                    ip_list.append(item)
+                network = ipaddress.ip_network(cidr, strict=False)
+                if self.ip_version == 4:
+                    for subnet in network.subnets(new_prefix=24):
+                        hosts = list(subnet.hosts())
+                        if hosts: ip_list.append(str(random.choice(hosts)))
                 else:
-                    # پردازش رنج CIDR
-                    network = ipaddress.ip_network(item, strict=False)
-                    if self.ip_version == 4 and network.version == 4:
-                        if network.prefixlen >= 24:
-                            hosts = list(network.hosts())
-                            if hosts: ip_list.append(str(random.choice(hosts)))
-                        else:
-                            for subnet in network.subnets(new_prefix=24):
-                                hosts = list(subnet.hosts())
-                                if hosts: ip_list.append(str(random.choice(hosts)))
-                    elif self.ip_version == 6 and network.version == 6:
-                        for _ in range(50):
-                            rand_int = random.randint(int(network.network_address)+1, int(network.broadcast_address)-1)
-                            ip_list.append(str(ipaddress.IPv6Address(rand_int)))
-            except Exception as e:
-                if self.log_callback:
-                    self.log_callback(f"خطا در پردازش ورودی [{item}]: {str(e)}")
-                continue
+                    for _ in range(50):
+                        rand_int = random.randint(int(network.network_address)+1, int(network.broadcast_address)-1)
+                        ip_list.append(str(ipaddress.IPv6Address(rand_int)))
+            except Exception: continue
         return ip_list
 
     async def test_single_ip(self, session: aiohttp.ClientSession, ip: str):
@@ -402,10 +383,9 @@ class ScanWorker(QThread):
     status_message = Signal(str)
     scan_completed = Signal(list)
 
-    def __init__(self, ip_version: int, custom_cidrs: List[str] = None, port=443, max_workers=150, latency_threshold=220):
+    def __init__(self, ip_version: int, port=443, max_workers=150, latency_threshold=220):
         super().__init__()
         self.ip_version = ip_version
-        self.custom_cidrs = custom_cidrs
         self.port = port
         self.max_workers = max_workers
         self.latency_threshold = latency_threshold
@@ -413,17 +393,7 @@ class ScanWorker(QThread):
 
     def run(self):
         if sys.platform == 'win32': asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-        
-        # پاکسازی فضاهای خالی ورودی کاربر
-        user_inputs = [c.strip() for c in self.custom_cidrs if c.strip()] if self.custom_cidrs else []
-
-        # انحصار ورودی کاربر: اگر کاربر چیزی وارد کرده باشد، رنج پیش‌فرض کاملاً نادیده گرفته می‌شود
-        if user_inputs:
-            cidrs = user_inputs
-            self.status_message.emit("⚠️ در حال اسکن انحصاری ورودی‌های سفارشی شما (رنج‌های پیش‌فرض نادیده گرفته شدند).")
-        else:
-            cidrs = CF_IPV4_CIDRS if self.ip_version == 4 else CF_IPV6_CIDRS
-
+        cidrs = CF_IPV4_CIDRS if self.ip_version == 4 else CF_IPV6_CIDRS
         self.scanner = CloudflareScanner(
             cidrs=cidrs, ip_version=self.ip_version,
             log_callback=lambda msg: self.status_message.emit(msg),
@@ -536,7 +506,7 @@ class CustomDialog(QDialog):
 class CloudflareScanUI(QWidget):
     def __init__(self):
         super().__init__()
-        self.resize(480, 840)
+        self.resize(460, 780)
         self.setStyleSheet(GLOBAL_DARK_STYLE)
         self.ipv4_scan_worker = None
         self.ipv6_scan_worker = None
@@ -577,12 +547,14 @@ class CloudflareScanUI(QWidget):
         main.setContentsMargins(16, 16, 16, 16)
         main.setSpacing(14)
 
+        # لوگو بالای صفحه
         title = QLabel('<span style="color:#F97316; font-weight:bold;">CLOUDFLARE</span> <span style="color:#F8FAFC; font-weight:light;">SCANNER</span>')
         font_title = QFont(SYSTEM_FONT, 20)
         title.setFont(font_title)
         title.setAlignment(Qt.AlignCenter)
         main.addWidget(title)
 
+        # ردیف دکمه‌های اصلی اسکن
         row1 = QHBoxLayout()
         self.btn_ipv4 = self.make_btn("", "#2563EB", "#3B82F6")
         self.btn_ipv4.clicked.connect(lambda: self.start_scan(4))
@@ -593,6 +565,7 @@ class CloudflareScanUI(QWidget):
         self.btn_stop.clicked.connect(self.confirm_stop)
         row1.addWidget(self.btn_ipv4); row1.addWidget(self.btn_ipv6); row1.addWidget(self.btn_stop)
 
+        # ردیف دکمه‌های خروجی و تست سرعت
         row2 = QHBoxLayout()
         self.btn_area = self.make_btn("", "#DB2777", "#EC4899")
         self.btn_area.setEnabled(False)
@@ -605,25 +578,7 @@ class CloudflareScanUI(QWidget):
         self.btn_export.clicked.connect(self.export_results)
         row2.addWidget(self.btn_area); row2.addWidget(self.btn_full); row2.addWidget(self.btn_export)
 
-        # فیلد ورودی دستی آی‌پی و CIDR کاربر
-        self.input_custom_ips = QTextEdit()
-        self.input_custom_ips.setPlaceholderText(t("placeholder_custom_ips"))
-        self.input_custom_ips.setMaximumHeight(80)
-        self.input_custom_ips.setStyleSheet("""
-            QTextEdit {
-                background-color: #18181C;
-                border: 1px solid #334155;
-                border-radius: 8px;
-                color: #F8FAFC;
-                font-family: Consolas, Monaco, monospace;
-                font-size: 11px;
-            }
-            QTextEdit:focus {
-                border: 1px solid #F97316;
-            }
-        """)
-        main.addWidget(self.input_custom_ips)
-
+        # تنظیمات بالایی ورودی‌ها
         grid1 = QHBoxLayout()
         self.input_region = QLineEdit()
         self.input_region.setFixedHeight(32)
@@ -644,6 +599,7 @@ class CloudflareScanUI(QWidget):
         grid1.addWidget(self.label_port)
         grid1.addWidget(self.combo_port)
 
+        # تنظیمات پایینی ورودی‌ها
         grid2 = QHBoxLayout()
         self.label_workers = QLabel()
         self.input_workers = QLineEdit("150")
@@ -669,6 +625,7 @@ class CloudflareScanUI(QWidget):
 
         main.addLayout(row1); main.addLayout(row2)
         
+        # خط جداکننده دکوراتیو
         sep = QFrame()
         sep.setFrameShape(QFrame.HLine)
         sep.setStyleSheet("background-color: #1E293B; max-height: 1px; border: none;")
@@ -676,11 +633,13 @@ class CloudflareScanUI(QWidget):
         
         main.addLayout(grid1); main.addLayout(grid2)
 
+        # نوار پیشرفت عملیات
         self.progress_bar = QProgressBar()
         self.progress_bar.setFixedHeight(6)
         self.progress_bar.setTextVisible(False)
         main.addWidget(self.progress_bar)
 
+        # نوار وضعیت زیرین
         status_frame = QHBoxLayout()
         self.status_label = QLabel("")
         self.status_label.setStyleSheet("color: #38BDF8; font-weight: 500;")
@@ -689,6 +648,7 @@ class CloudflareScanUI(QWidget):
         status_frame.addWidget(self.status_label); status_frame.addStretch(); status_frame.addWidget(self.speed_label)
         main.addLayout(status_frame)
 
+        # دکمه‌های ناوبری تب‌ها با طراحی کپسولی مدرن
         tab_btn_layout = QHBoxLayout()
         self.tab_btn_log = QPushButton()
         self.tab_btn_log.setFixedHeight(32)
@@ -703,10 +663,10 @@ class CloudflareScanUI(QWidget):
         tab_btn_layout.addWidget(self.tab_btn_log); tab_btn_layout.addWidget(self.tab_btn_speed)
         main.addLayout(tab_btn_layout)
 
+        # صفحات استک (تب‌ها)
         self.stacked = QStackedWidget()
         self.status_display = QTextEdit()
         self.status_display.setReadOnly(True)
-        self.status_display.setStyleSheet("color: #38BDF8;")
         self.stacked.addWidget(self.status_display)
 
         self.speed_scroll = QScrollArea()
@@ -739,7 +699,6 @@ class CloudflareScanUI(QWidget):
         self.btn_full.setText(t("btn_full"))
         self.btn_export.setText(t("btn_export"))
         self.input_region.setPlaceholderText(t("placeholder_region"))
-        self.input_custom_ips.setPlaceholderText(t("placeholder_custom_ips"))
         self.label_speed_cnt.setText(t("label_speed_cnt"))
         self.label_port.setText(t("label_port"))
         self.label_workers.setText(t("label_workers"))
@@ -770,25 +729,13 @@ class CloudflareScanUI(QWidget):
         self.clear_speed_cards()
         self.status_display.clear()
         self.status_bar_update(t("status_scanning", version=version))
-        
-        raw_text = self.input_custom_ips.toPlainText()
-        custom_lines = [line.strip() for line in raw_text.split('\n') if line.strip()]
-        
         port = int(self.combo_port.currentText())
         self.current_scan_port = port
-        
-        worker = ScanWorker(
-            version, 
-            custom_cidrs=custom_lines if custom_lines else None,
-            port=port, 
-            max_workers=int(self.input_workers.text() or "150"), 
-            latency_threshold=int(self.input_latency.text() or "220")
-        )
+        worker = ScanWorker(version, port=port, max_workers=int(self.input_workers.text() or "150"), latency_threshold=int(self.input_latency.text() or "220"))
         worker.progress_update.connect(self.update_progress)
         worker.status_message.connect(self.update_status)
         worker.scan_completed.connect(lambda res: setattr(self, 'scan_results', [r for r in res if r.get('iata_code')]))
         worker.finished.connect(lambda: self.worker_finished("scan"))
-        
         if version == 4: self.ipv4_scan_worker = worker
         else: self.ipv6_scan_worker = worker
         worker.start()
@@ -834,7 +781,13 @@ class CloudflareScanUI(QWidget):
         self.switch_tab(1)
         for i, r in enumerate(results, 1):
             card = QFrame()
-            card.setStyleSheet("QFrame { background-color: #1E1E24; border: 1px solid #2D2D35; border-radius: 8px; }")
+            card.setStyleSheet("""
+                QFrame {
+                    background-color: #1E1E24;
+                    border: 1px solid #2D2D35;
+                    border-radius: 8px;
+                }
+            """)
             layout = QHBoxLayout(card)
             layout.setContentsMargins(14, 10, 14, 10)
             
@@ -879,7 +832,6 @@ class CloudflareScanUI(QWidget):
         self.btn_full.setEnabled(not busy and bool(self.scan_results))
         self.btn_area.setEnabled(not busy and bool(self.scan_results))
         self.btn_export.setEnabled(not busy and bool(self.speed_results))
-        self.input_custom_ips.setEnabled(not busy)
 
     def update_progress(self, cur, total, ok, speed):
         if total: self.progress_bar.setValue(int(cur/total*100))
