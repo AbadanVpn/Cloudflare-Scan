@@ -26,28 +26,38 @@
 
 1. **کلون کردن ریپازیتوری:**
    ```bash
-   git clone [https://github.com/AbadanVpn/Cloudflare-Scanner.git](https://github.com/AbadanVpn/Cloudflare-Scanner.git)
+   git clone https://github.com/AbadanVpn/Cloudflare-Scanner.git
    cd Cloudflare-Scanner
-نصب پیش‌نیازها:
-این پروژه به پایتون نسخه 3.8 یا بالاتر نیاز دارد.
+   ```
 
-Bash
-pip install PySide6 aiohttp
-اجرای برنامه:
+2. **نصب پیش‌نیازها:**
+   این پروژه به پایتون نسخه 3.8 یا بالاتر نیاز دارد.
+   ```bash
+   pip install PySide6 aiohttp
+   ```
 
-Bash
-python main.py
-📦 دانلود نسخه آماده (Releases)
-اگر نیازی به سورس‌کد ندارید و می‌خواهید مستقیماً از برنامه استفاده کنید، به بخش Releases در سمت راست همین صفحه مراجعه کرده و آخرین نسخه کامپایل‌شده فایل CloudflareScanner.exe (بدون نیاز به نصب هیچ ابزار جانبی) را دانلود کنید.
+3. **اجرای برنامه:**
+   ```bash
+   python main.py
+   ```
 
-🛠️ ساختار فنی و تکنولوژی‌ها (Technologies)
-Python 3.10+
+---
 
-PySide6 (Qt for Python) - برای طراحی رابط کاربری (GUI)
+### 📦 دانلود نسخه آماده (Releases)
 
-Asyncio & Aiohttp - برای مدیریت کانکشن‌ها به صورت موازی و آسنکرون
+اگر نیازی به سورس‌کد ندارید و می‌خواهید مستقیماً از برنامه استفاده کنید، به بخش Releases در سمت راست همین صفحه مراجعه کرده و آخرین نسخه کامپایل‌شده فایل `CloudflareScanner.exe` (بدون نیاز به نصب هیچ ابزار جانبی) را دانلود کنید.
 
-GitHub Actions - برای کامپایل اتوماتیک و انتشار خودکار نسخه EXE
+---
 
-📝 لایسنس (License)
+### 🛠️ ساختار فنی و تکنولوژی‌ها (Technologies)
+
+- Python 3.10+
+- PySide6 (Qt for Python) - برای طراحی رابط کاربری (GUI)
+- Asyncio & Aiohttp - برای مدیریت کانکشن‌ها به صورت موازی و آسنکرون
+- GitHub Actions - برای کامپایل اتوماتیک و انتشار خودکار نسخه EXE
+
+---
+
+### 📝 لایسنس (License)
+
 این پروژه تحت لایسنس MIT منتشر شده است. استفاده، تغییر و بازنشر آن با ذکر نام توسعه‌دهنده کاملاً آزاد است.
