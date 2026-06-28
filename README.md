@@ -1,6 +1,6 @@
 🌐 [English](https://github.com/AbadanVpn/Cloudflare-Scanner/blob/main/READMEen.md) -- [Chinese / 中文](https://github.com/AbadanVpn/Cloudflare-Scanner/blob/main/READMEcn.md)
 ---
-# ⚡ Cloudflare Advanced Scanner | اسکنر پیشرفته کلودفلر
+# ⚡ Cloudflare Scanner | اسکنر کلودفلر
 
 <p align="center">
   <img src="https://img.shields.io/github/downloads/AbadanVpn/Cloudflare-Scanner/total?style=for-the-badge&color=orange" alt="Downloads">
