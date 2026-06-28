@@ -1,4 +1,4 @@
-📝 [English](https://github.com/AbadanVpn/Cloudflare-Scanner/blob/main/READMEen.md) -- [Chinese / 中文](https://github.com/AbadanVpn/Cloudflare-Scanner/blob/main/READMEcn.md)
+🌐 [English](https://github.com/AbadanVpn/Cloudflare-Scanner/blob/main/READMEen.md) -- [Chinese / 中文](https://github.com/AbadanVpn/Cloudflare-Scanner/blob/main/READMEcn.md)
 ---
 # ⚡ Cloudflare Advanced Scanner | اسکنر پیشرفته کلودفلر
 
