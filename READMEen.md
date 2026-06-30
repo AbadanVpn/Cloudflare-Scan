@@ -61,3 +61,9 @@ If you don't need the source code and want to use the app directly, go to the **
 ### 📝 License
 
 This project is released under the MIT License. You are free to use, modify, and redistribute it as long as you credit the original developer.
+
+---
+
+### ❕ Note:
+
+This project is written entirely in Ai
